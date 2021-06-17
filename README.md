@@ -20,7 +20,7 @@ or (after building)
 Then send some requests to http://localhost:8080/
 
 ## Test
-./mvnw spring-boot:test
+./mvnw test **NOTE: CURRENTLY NOT WORKING 6/17**
 
 ## Api (corresponding to functions above)
 1. GET /user/1/programs
