@@ -168,22 +168,26 @@ public class UserService {
         //Validation - Are there enough available points to make the transfer?
         if (user.getPoints()<pointTransfer.getAmount()) {
             pointTransfer.setStatus(FAILURE.name());
+            String msg = "failed: Not enough points for transfer {" + pointTransfer.getMessage() +"}";
+            pointTransfer.setMessage(msg);
             pointTransferRepository.save(pointTransfer);
             response.setStatus(FAILURE);
             response.setEndingBalance(user.getPoints());
             response.setAmount(pointTransfer.getAmount());
-            response.setMessage("failed: Not enough points for transfer {" + pointTransfer.getMessage() + "}");
+            response.setMessage(msg);
             return response;
         }
 
         //Validation - Is the user subscribed to the requested rewards program?
         if (!PROGRAM_EXCHANGERATE_MAP.containsKey(pointTransfer.getDestination())) {
             pointTransfer.setStatus(FAILURE.name());
+            String msg = "failed: User not subscribed {" + pointTransfer.getMessage() + "}";
+            pointTransfer.setMessage(msg);
             pointTransferRepository.save(pointTransfer);
             response.setStatus(FAILURE);
             response.setEndingBalance(user.getPoints());
             response.setAmount(pointTransfer.getAmount());
-            response.setMessage("failed: User not subscribed {" + pointTransfer.getMessage() + "}");
+            response.setMessage(msg);
             return response;
         }
 
@@ -191,11 +195,13 @@ public class UserService {
         double exchangeRate = PROGRAM_EXCHANGERATE_MAP.get(pointTransfer.getDestination());
         if (exchangeRate * pointTransfer.getAmount() < 1) {
             pointTransfer.setStatus(FAILURE.name());
+            String msg = "failed: Post-exchange rate amount too low {" + pointTransfer.getMessage() + "}";
+            pointTransfer.setMessage(msg);
             pointTransferRepository.save(pointTransfer);
             response.setStatus(FAILURE);
             response.setEndingBalance(user.getPoints());
             response.setAmount(pointTransfer.getAmount());
-            response.setMessage("failed: Post-exchange rate amount too low {" + pointTransfer.getMessage() + "}");
+            response.setMessage(msg);
             return response;
         }
 
@@ -216,11 +222,13 @@ public class UserService {
             // record failure with other useful info into pointtransferrepository,
             // so it can be seen by /history
             pointTransfer.setStatus(FAILURE.name());
+            String msg = "failed: 3rd Party Transaction Failure {" + pointTransfer.getMessage() + "}";
+            pointTransfer.setMessage(msg);
             pointTransferRepository.save(pointTransfer);
             response.setStatus(FAILURE);
             response.setEndingBalance(user.getPoints());
             response.setAmount(pointTransfer.getAmount());
-            response.setMessage("failed: 3rd Party Transaction Failure {" + pointTransfer.getMessage() + "}");
+            response.setMessage(msg);
             return response;
         }
 
@@ -295,4 +303,11 @@ public class UserService {
         return false;
     }
 
+    //  Resets the point count to 999 and clear the history
+    public User reset(long id) {
+        userRepository.updatePointsById(id,999);
+        pointTransferRepository.removeAllById(1);
+
+        return userRepository.findById(id);
+    }
 }

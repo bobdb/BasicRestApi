@@ -63,6 +63,11 @@ public class MainController {
     }
 
 
+    @GetMapping("/user/{id}/reset")
+    public User userReset(@PathVariable("id") long id) {
+        return userService.reset(id);
+    }
+
     // "dummy" endpoint to represent a 3rd party receiving transferred points
     @GetMapping("/echo")
     public String echo() {

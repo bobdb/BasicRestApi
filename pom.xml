@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>basic-rest-api</artifactId>
+	<artifactId>payment-rest-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>basic-rest-api</name>
-	<description>Template to quickly expose some resources</description>
+	<name>payment-rest-api</name>
+	<description>API to fund and transfer Points Rewards</description>
 	<properties>
 		<java.version>1.8</java.version>
 	</properties>
@@ -55,5 +55,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
 </project>

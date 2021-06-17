@@ -11,13 +11,15 @@ While active, endpoints corresponding to the functionality described above are e
 
 ## Build
 (from directory with pom.xml)
-mvn:build
+./mvnw clean package
 
 ## Run
-mvn:
+./mvnw spring-boot:run
+or (after building)
+./java -jar target/payment-rest-api-0.0.1-SNAPSHOT.jar
 
 ## Test
-mvn:
+./mvnw spring-boot:test
 
 ## Api (corresponding to functions above)
 1. GET /user/1/programs
@@ -36,10 +38,25 @@ Some reasons for this decision: the simplicity of abstracting to multiple users,
 /users/{id}
 /users/{id}/history
 /users/{id}/programs
+/users/{id}/reset
 
-## Requests and Responses
+## Usage
+For funding n Points to a User
+POST /users/{id}/fund with body
+{"amount" : n }
 
-    
+To transfer n Points to another program.  See below for valid program names.
+POST /users/{id}/transfer with body
+{"amount" : n, "destination", ProgramName}
 
+To view the User's history, i.e. all transactions successful or not with lots of metadata
+GET /users/{id}/history
 
+To view the User's valid Programs for which point transfers are eligible.
+GET /users/{id}/programs
 
+## Program Names and Loyalty Points
+Three fake Programs with which to transfer points are hardcoded.  Each has a different Exchange rate to test with.
+They are "Program1" (exchange rate 2), "Program2" (exchange rate 3), "Program3" (exchange rate 0.5)
+
+All points must be positive integers greater than or equal to one.
