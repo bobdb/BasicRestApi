@@ -5,9 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.example.basicrestapi.StatusName.*;
 
@@ -57,12 +55,13 @@ public class MainController {
         return userService.findAll();
     }
 
+    // Get the a user by id
     @GetMapping("/user/{id}")
     public User getUser(@PathVariable("id") long id) {
         return userService.findById(id);
     }
 
-
+    // Reset a user to initial state, and clear user's history
     @GetMapping("/user/{id}/reset")
     public User userReset(@PathVariable("id") long id) {
         return userService.reset(id);

@@ -135,10 +135,13 @@ public class UserService {
         // Get user from database
         User user = findById(userId);
 
+        // Start building Response object
         FundingResponse response = new FundingResponse();
         response.setId(userId);
         response.setStartingBalance(user.getPoints());
+        response.setDestination(pointTransfer.getDestination());
 
+        // Update PointTransfer object
         StringBuilder sb = new StringBuilder();
         sb.append("UserId \'")
                 .append(userId)
@@ -146,62 +149,45 @@ public class UserService {
                 .append(pointTransfer.getAmount())
                 .append(" points to ")
                 .append(pointTransfer.getDestination());
-        pointTransfer.setUserId(userId);
         pointTransfer.setMessage(sb.toString());
+        pointTransfer.setUserId(userId);
         pointTransfer.setStartingBalance(user.getPoints());
         pointTransfer.setExchangeRate(PROGRAM_EXCHANGERATE_MAP.get(pointTransfer.getDestination()));
 
         //Validation - The number of points needs to be at least 1
         if (pointTransfer.getAmount()<1) {
-            pointTransfer.setStatus(FAILURE.name());
-            pointTransfer.setEndingBalance(user.getPoints());
             String msg = "failed: The number of points needs to be at least 1 {"+ pointTransfer.getMessage() + "}";
-            pointTransfer.setMessage(msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
             pointTransferRepository.save(pointTransfer);
-            response.setStatus(FAILURE);
-            response.setEndingBalance(user.getPoints());
-            response.setAmount(pointTransfer.getAmount());
-            response.setMessage(msg);
+            updateFailedPointTransferResponse(response, FAILURE, user.getPoints(), pointTransfer.getAmount(), msg);
             return response;
         }
 
         //Validation - Are there enough available points to make the transfer?
         if (user.getPoints()<pointTransfer.getAmount()) {
-            pointTransfer.setStatus(FAILURE.name());
             String msg = "failed: Not enough points for transfer {" + pointTransfer.getMessage() +"}";
-            pointTransfer.setMessage(msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
             pointTransferRepository.save(pointTransfer);
-            response.setStatus(FAILURE);
-            response.setEndingBalance(user.getPoints());
-            response.setAmount(pointTransfer.getAmount());
-            response.setMessage(msg);
+            updateFailedPointTransferResponse(response, FAILURE, user.getPoints(), pointTransfer.getAmount(), msg);
             return response;
         }
 
         //Validation - Is the user subscribed to the requested rewards program?
         if (!PROGRAM_EXCHANGERATE_MAP.containsKey(pointTransfer.getDestination())) {
-            pointTransfer.setStatus(FAILURE.name());
             String msg = "failed: User not subscribed {" + pointTransfer.getMessage() + "}";
-            pointTransfer.setMessage(msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
             pointTransferRepository.save(pointTransfer);
-            response.setStatus(FAILURE);
-            response.setEndingBalance(user.getPoints());
-            response.setAmount(pointTransfer.getAmount());
-            response.setMessage(msg);
+            updateFailedPointTransferResponse(response,FAILURE, user.getPoints(),pointTransfer.getAmount(),msg);
             return response;
         }
 
         //Validation - The receiving party's number of points after performing the exchange rate must be >= 1
         double exchangeRate = PROGRAM_EXCHANGERATE_MAP.get(pointTransfer.getDestination());
         if (exchangeRate * pointTransfer.getAmount() < 1) {
-            pointTransfer.setStatus(FAILURE.name());
             String msg = "failed: Post-exchange rate amount too low {" + pointTransfer.getMessage() + "}";
-            pointTransfer.setMessage(msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
             pointTransferRepository.save(pointTransfer);
-            response.setStatus(FAILURE);
-            response.setEndingBalance(user.getPoints());
-            response.setAmount(pointTransfer.getAmount());
-            response.setMessage(msg);
+            updateFailedPointTransferResponse(response, FAILURE, user.getPoints(), pointTransfer.getAmount(), msg);
             return response;
         }
 
@@ -221,14 +207,10 @@ public class UserService {
             // rollback changes
             // record failure with other useful info into pointtransferrepository,
             // so it can be seen by /history
-            pointTransfer.setStatus(FAILURE.name());
             String msg = "failed: 3rd Party Transaction Failure {" + pointTransfer.getMessage() + "}";
-            pointTransfer.setMessage(msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
             pointTransferRepository.save(pointTransfer);
-            response.setStatus(FAILURE);
-            response.setEndingBalance(user.getPoints());
-            response.setAmount(pointTransfer.getAmount());
-            response.setMessage(msg);
+            updateFailedPointTransferResponse(response, FAILURE, user.getPoints(), pointTransfer.getAmount(), msg);
             return response;
         }
 
@@ -259,6 +241,20 @@ public class UserService {
         response.setEndingBalance(pointTransfer.getEndingBalance());
         response.setDestination(pointTransfer.getDestination());
         return response;
+    }
+
+    private void updateFailedPointTransferResponse(FundingResponse response, StatusName status, long endingBalance, long amount, String msg) {
+        response.setStatus(status);
+        response.setEndingBalance(endingBalance);
+        response.setAmount(amount);
+        response.setMessage(msg);
+    }
+
+    // helper method to fill in field of PointTransfer when there is an exception
+    private void updateFailedPointTransfer(Pointtransfer pointTransfer, String status, long points, String msg) {
+        pointTransfer.setStatus(status);
+        pointTransfer.setAmount(points);
+        pointTransfer.setMessage(msg);
     }
 
     /**
