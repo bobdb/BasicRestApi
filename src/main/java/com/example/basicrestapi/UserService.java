@@ -1,9 +1,11 @@
 package com.example.basicrestapi;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -157,16 +159,17 @@ public class UserService {
         //Validation - The number of points needs to be at least 1
         if (pointTransfer.getAmount()<1) {
             String msg = "failed: The number of points needs to be at least 1 {"+ pointTransfer.getMessage() + "}";
-            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),msg);
             pointTransferRepository.save(pointTransfer);
             updateFailedPointTransferResponse(response, FAILURE, user.getPoints(), pointTransfer.getAmount(), msg);
             return response;
         }
+      //  private void updateFailedPointTransferResponse(FundingResponse response, StatusName status, long endingBalance, long amount, String msg) {
 
         //Validation - Are there enough available points to make the transfer?
         if (user.getPoints()<pointTransfer.getAmount()) {
             String msg = "failed: Not enough points for transfer {" + pointTransfer.getMessage() +"}";
-            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),msg);
             pointTransferRepository.save(pointTransfer);
             updateFailedPointTransferResponse(response, FAILURE, user.getPoints(), pointTransfer.getAmount(), msg);
             return response;
@@ -175,7 +178,7 @@ public class UserService {
         //Validation - Is the user subscribed to the requested rewards program?
         if (!PROGRAM_EXCHANGERATE_MAP.containsKey(pointTransfer.getDestination())) {
             String msg = "failed: User not subscribed {" + pointTransfer.getMessage() + "}";
-            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),msg);
             pointTransferRepository.save(pointTransfer);
             updateFailedPointTransferResponse(response,FAILURE, user.getPoints(),pointTransfer.getAmount(),msg);
             return response;
@@ -185,7 +188,7 @@ public class UserService {
         double exchangeRate = PROGRAM_EXCHANGERATE_MAP.get(pointTransfer.getDestination());
         if (exchangeRate * pointTransfer.getAmount() < 1) {
             String msg = "failed: Post-exchange rate amount too low {" + pointTransfer.getMessage() + "}";
-            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),msg);
             pointTransferRepository.save(pointTransfer);
             updateFailedPointTransferResponse(response, FAILURE, user.getPoints(), pointTransfer.getAmount(), msg);
             return response;
@@ -208,7 +211,7 @@ public class UserService {
             // record failure with other useful info into pointtransferrepository,
             // so it can be seen by /history
             String msg = "failed: 3rd Party Transaction Failure {" + pointTransfer.getMessage() + "}";
-            updateFailedPointTransfer(pointTransfer, FAILURE.name(),user.getPoints(),msg);
+            updateFailedPointTransfer(pointTransfer, FAILURE.name(),msg);
             pointTransferRepository.save(pointTransfer);
             updateFailedPointTransferResponse(response, FAILURE, user.getPoints(), pointTransfer.getAmount(), msg);
             return response;
@@ -251,9 +254,8 @@ public class UserService {
     }
 
     // helper method to fill in field of PointTransfer when there is an exception
-    private void updateFailedPointTransfer(Pointtransfer pointTransfer, String status, long points, String msg) {
+    private void updateFailedPointTransfer(Pointtransfer pointTransfer, String status, String msg) {
         pointTransfer.setStatus(status);
-        pointTransfer.setAmount(points);
         pointTransfer.setMessage(msg);
     }
 
@@ -280,23 +282,25 @@ public class UserService {
      * @param pointTransfer
      * @return - returns true if an echo ok() is received
      */
-    private boolean transferToThirdParty(Pointtransfer pointTransfer) {
+
+
+    public boolean transferToThirdParty(Pointtransfer pointTransfer) {
         // the "dummy" endpoint
         final String ECHO_URI = "http://localhost:8080/echo";
 
         // Send a GET to the uri and if it receives a Success code (200) then return true
-        try {
-            URL url = new URL(ECHO_URI);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            int status = con.getResponseCode();
-            return (status==200);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            URL url = new URL(ECHO_URI);
+//            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+//            con.setRequestMethod("GET");
+//            int status = con.getResponseCode();
+//            return (status==200);
+//        } catch (IOException e ) {
+//            e.printStackTrace();
+//        }
 
         // hopefully this is never triggered
-        return false;
+        return true;
     }
 
     //  Resets the point count to 999 and clear the history
