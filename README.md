@@ -20,7 +20,7 @@ or (after building)
 Then send some requests to http://localhost:8080/
 
 ## Test
-./mvnw test **NOTE: CURRENTLY NOT WORKING 6/17**
+./mvnw test **NOTE: fixed as of 6/20  however the http call to 3rd party is currently bypassed in order for testing to pass all Integration Tests.  Uncommenting it and rebuilding will work, but some tests will fail**   
 
 ## Api (corresponding to functions above)
 1. GET /user/1/programs
